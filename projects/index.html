@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoidWaifu</title>
+    <link rel="stylesheet" href="../css/projectspage.css">
+    <link rel="icon" type="image/png" href="assets/icon.png">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../">VoidWaifu</a>
+                </div>
+                <div class="menu-toggle" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <nav id="mainNav">
+                    <ul>
+                        <li><a href="../">Главная</a></li>
+                        <li><a href="../blog/">Блог</a></li>
+                        <li><a href="../projects/">Другие проекты</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="hero">
+                <h1>Мои проекты</h1>
+                <p>Здесь собраны все мои работы и проекты</p>
+            </div>
+            
+            <div class="projects-grid">
+                <div class="project-card">
+                    <div class="project-content">
+                        <h3>FreeVPN/Proxy</h3>
+                        <p>Бесплатные VPN и прокси сервисы для безопасного серфинга в интернете</p>
+                        <a href="https://voidwaifu.github.io/FreeVPN-Proxy/" target="_blank" class="project-btn">
+                            Открыть проект
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const mainNav = document.getElementById('mainNav');
+
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mainNav.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.header-content')) {
+                mainNav.classList.remove('active');
+                menuToggle.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
