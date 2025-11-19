@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoidWaifu</title>
+    <link rel="stylesheet" href="css/mainpage.css">
+    <link rel="icon" type="image/png" href="assets/icon.png">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="./">VoidWaifu</a>
+                </div>
+                <div class="menu-toggle" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <nav id="mainNav">
+                    <ul>
+                        <li><a href="./">Главная</a></li>
+                        <li><a href="./blog/">Блог</a></li>
+                        <li><a href="./projects/">Другие проекты</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <section class="hero">
+                <h1>VoidWaifu website</h1>
+                <p>Блог и всякие проекты</p>
+            </section>
+            
+            <section class="content-section">
+                <div class="content-wrapper">
+                    <div class="text-block">
+                        <h2>Добро пожаловать!</h2>
+                        <p>Вы на странице моего личного блога, ура! Я рад, что вы сюда добрались.<br><br>
+                        Здесь я буду выкладывать посты на разные темы: то, что меня интересует, 
+                        чем хочу поделиться или просто то, что может пригодиться мне или вам в будущем.<br><br>
+                        Этот сайт я разработал полностью сам — от начала и до конца. 
+                        Это мой первый проект такого масштаба, поэтому опыта в подобном у меня 
+                        на данный момент (актуально на 19.11.2025) буквально нет. 
+                        Сайт может иметь некоторые недочёты, например некорректное отображение 
+                        или функциональные недоработки, но я обязательно буду их исправлять 
+                        и поддерживать всё в максимально хорошем виде, который могу создать.<br><br>
+                        Я буду очень рад, если вам окажется полезным или интересным что-то из того, 
+                        что здесь есть — от постов в блоге до других моих проектов, которые я буду 
+                        активно пополнять и поддерживать. Спасибо, что заглянули сюда и, возможно, 
+                        дочитали до этого момента. Я всегда буду рад обратной связи, вашим замечаниям 
+                        и предложениям!</p>
+                    </div>
+                    <div class="buttons-block">
+                        <button class="action-btn" id="telegramBtn">Телеграм</button>
+                        <button class="action-btn" id="emailBtn">Почта</button>
+                        <button class="action-btn" id="projectsBtn">Все проекты</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="notification" class="notification">Почта скопирована</div>
+
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const mainNav = document.getElementById('mainNav');
+        const telegramBtn = document.getElementById('telegramBtn');
+        const emailBtn = document.getElementById('emailBtn');
+        const projectsBtn = document.getElementById('projectsBtn');
+        const notification = document.getElementById('notification');
+
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mainNav.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.header-content')) {
+                mainNav.classList.remove('active');
+                menuToggle.classList.remove('active');
+            }
+        });
+
+        telegramBtn.addEventListener('click', () => {
+            window.open('https://t.me/VoidWaifu', '_blank');
+        });
+
+        emailBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText('VoidWaifu_zip@hotmail.com')
+                .then(() => {
+                    notification.classList.add('show');
+                    setTimeout(() => {
+                        notification.classList.remove('show');
+                    }, 3000);
+                })
+                .catch(err => {
+                    console.error('Ошибка при копировании: ', err);
+                });
+        });
+
+        projectsBtn.addEventListener('click', () => {
+            window.location.href = 'https://voidwaifu.github.io/voidwaifu/projects/';
+        });
+    </script>
+</body>
+</html>
