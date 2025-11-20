@@ -291,6 +291,86 @@
             outline: none;
         }
 
+        #open-edit-modal {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: var(--bg-accent);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        #open-edit-modal:hover {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        #edit-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1500;
+            backdrop-filter: blur(3px);
+        }
+
+        .edit-modal-content {
+            background: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 10px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .edit-modal-content h2 {
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+
+        #html-input {
+            width: 100%;
+            flex: 1;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: monospace;
+            resize: none;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        #html-input:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
         @media (max-width: 768px) {
             .article-header h1 { font-size: 2rem; }
             #floating-window {
@@ -298,6 +378,10 @@
                 width: auto;
             }
             #open-floating { bottom: 15px; right: 15px; }
+            #open-edit-modal {
+                bottom: 15px;
+                left: 15px;
+            }
         }
     </style>
 </head>
@@ -318,6 +402,19 @@
     </main>
 
     <div class="notification" id="notification">Уведомление</div>
+
+    <button id="open-edit-modal">Редактировать</button>
+
+    <div id="edit-modal">
+        <div class="edit-modal-content">
+            <h2>Загрузить HTML поста</h2>
+            <textarea id="html-input" placeholder="Вставьте HTML код поста здесь..."></textarea>
+            <div class="modal-buttons">
+                <button class="control-btn" id="load-html-btn">Загрузить в редактор</button>
+                <button class="control-btn" id="close-edit-modal-btn" style="border-color: #cf6679; color: #cf6679;">Отмена</button>
+            </div>
+        </div>
+    </div>
 
     <div id="floating-window">
         <p>ID поста: <span id="timestamp-display"></span></p>
@@ -349,8 +446,8 @@
     </div>
 
     <script>
-        const timestamp = Math.floor(Date.now() / 1000);
-        const dateObj = new Date(timestamp * 1000);
+        let timestamp = Math.floor(Date.now() / 1000);
+        let dateObj = new Date(timestamp * 1000);
         
         const timestampDisplay = document.getElementById('timestamp-display');
         const dateDisplay = document.getElementById('publish-date');
@@ -549,6 +646,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoidWaifu - ${postTitle}</title>
+    <meta name="voidwaifu:timestamp" content="${timestamp}">
+    <meta name="voidwaifu:date" content="${postDate}">
     <link rel="icon" type="image/png" href="../../../assets/icon.png">
     <style>
         * { 
@@ -899,6 +998,10 @@
             nav ul li:last-child a { 
                 border-bottom: none; 
             }
+
+            nav ul li a::after {
+                bottom: 0;
+            }
         }
         
         @media (max-width: 360px) {
@@ -993,6 +1096,111 @@
             navigator.clipboard.writeText(finalHtml).then(() => {
                 showNotification('Полный HTML поста скопирован!');
             });
+        });
+
+        const openEditModalBtn = document.getElementById('open-edit-modal');
+        const editModal = document.getElementById('edit-modal');
+        const htmlInput = document.getElementById('html-input');
+        const loadHtmlBtn = document.getElementById('load-html-btn');
+        const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
+
+        openEditModalBtn.addEventListener('click', () => {
+            editModal.style.display = 'flex';
+            htmlInput.focus();
+        });
+
+        closeEditModalBtn.addEventListener('click', () => {
+            editModal.style.display = 'none';
+            htmlInput.value = '';
+        });
+
+        loadHtmlBtn.addEventListener('click', () => {
+            const htmlContent = htmlInput.value.trim();
+            
+            if (!htmlContent) {
+                showNotification('Введите HTML код');
+                return;
+            }
+
+            try {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+
+                const metaTimestamp = tempDiv.querySelector('meta[name="voidwaifu:timestamp"]');
+                const metaDate = tempDiv.querySelector('meta[name="voidwaifu:date"]');
+                const articleMeta = tempDiv.querySelector('.article-meta');
+
+                if (metaTimestamp) {
+                    timestamp = parseInt(metaTimestamp.getAttribute('content'));
+                    timestampDisplay.textContent = timestamp;
+                    dateObj = new Date(timestamp * 1000);
+                }
+
+                if (metaDate) {
+                    dateDisplay.textContent = metaDate.getAttribute('content');
+                } else if (articleMeta) {
+                    dateDisplay.textContent = articleMeta.textContent;
+                }
+
+                const titleElement = tempDiv.querySelector('.article-header h1');
+                if (titleElement) {
+                    titleInput.value = titleElement.textContent || '';
+                }
+
+                const contentElement = tempDiv.querySelector('.article-content');
+                if (contentElement) {
+                    editor.innerHTML = '';
+                    
+                    const childNodes = contentElement.childNodes;
+                    
+                    for (let node of childNodes) {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            if (node.tagName === 'H2') {
+                                const div = document.createElement('div');
+                                div.textContent = '#' + (node.textContent || '').trim();
+                                div.classList.add('editor-h2-style');
+                                editor.appendChild(div);
+                            } else if (node.tagName === 'P') {
+                                const lines = node.innerHTML.split('<br>');
+                                
+                                for (let i = 0; i < lines.length; i++) {
+                                    const div = document.createElement('div');
+                                    div.textContent = lines[i].replace(/<[^>]*>/g, '');
+                                    editor.appendChild(div);
+                                }
+                                
+                                if (lines.length > 0) {
+                                    const emptyDiv = document.createElement('div');
+                                    emptyDiv.innerHTML = '<br>';
+                                    editor.appendChild(emptyDiv);
+                                }
+                            }
+                        }
+                    }
+                    
+                    const lastChild = editor.lastChild;
+                    if (lastChild && lastChild.innerHTML === '<br>') {
+                        editor.removeChild(lastChild);
+                    }
+                    
+                    showNotification('HTML загружен в редактор');
+                    editModal.style.display = 'none';
+                    htmlInput.value = '';
+                    updatePlaceholder();
+                } else {
+                    showNotification('Не удалось найти содержимое статьи');
+                }
+            } catch (error) {
+                console.error('Ошибка при парсинге HTML:', error);
+                showNotification('Ошибка при загрузке HTML');
+            }
+        });
+
+        editModal.addEventListener('click', (e) => {
+            if (e.target === editModal) {
+                editModal.style.display = 'none';
+                htmlInput.value = '';
+            }
         });
 
     </script>
