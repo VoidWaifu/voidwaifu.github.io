@@ -1,9 +1,9 @@
 const posts = [
     
  {
-        id: 1763656447,
-        title: "Тестовыйqwert",
-        description: "rerere"
+        id: 1763657416,
+        title: "Тестовая карточка",
+        description: "Тестовое описание карточки "
  }
     
 ];
