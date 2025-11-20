@@ -10,6 +10,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            max-width: 100%;
         }
 
         :root {
@@ -22,6 +23,11 @@
             --accent-hover: #9d65d0;
             --border: #333333;
             --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
         body {
@@ -95,7 +101,7 @@
         }
 
         .container {
-            width: 90%;
+            width: 100%;
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 15px;
@@ -106,6 +112,7 @@
             padding: 2rem 0;
             position: relative;
             z-index: 1;
+            width: 100%;
         }
 
         .error-container {
@@ -117,6 +124,7 @@
             text-align: center;
             padding: 2rem;
             position: relative;
+            width: 100%;
         }
 
         .error-code {
@@ -358,7 +366,7 @@
 
         @media (max-width: 768px) {
             .container {
-                width: 95%;
+                width: 100%;
                 padding: 0 10px;
             }
 
