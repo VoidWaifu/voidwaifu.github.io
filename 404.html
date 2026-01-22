@@ -5,42 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoidWaifu - Страница не найдена</title>
     
-    <!-- Скрипт для обработки ссылок должен быть самым первым -->
     <script>
-        // Функция для проверки, является ли строка 0Oo-кодировкой
-        function is0OoString(str) {
-            return /^[0Oo]+$/.test(str);
+        // Функция декодирования для обычного режима
+        function decodeNormal(short) {
+            try {
+                let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
+                while (base64.length % 4) {
+                    base64 += '=';
+                }
+                return decodeURIComponent(escape(atob(base64)));
+            } catch (e) {
+                try {
+                    let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
+                    while (base64.length % 4) {
+                        base64 += '=';
+                    }
+                    return atob(base64);
+                } catch (e2) {
+                    return null;
+                }
+            }
         }
 
-        // Функции для декодирования ссылок
-        function base64To0Oo(base64) {
-            base64 = base64.replace(/=/g, '');
-            let bin = '';
-            for (let i = 0; i < base64.length; ++i) {
-                const c = base64[i];
-                let v;
-                if ('A' <= c && c <= 'Z') v = c.charCodeAt(0) - 65;
-                else if ('a' <= c && c <= 'z') v = c.charCodeAt(0) - 71;
-                else if ('0' <= c && c <= '9') v = c.charCodeAt(0) + 4;
-                else if (c === '+') v = 62;
-                else if (c === '/') v = 63;
-                else continue;
-                bin += v.toString(2).padStart(6, '0');
-            }
-            while (bin.length % 2 !== 0) {
-                bin += '0';
-            }
-            let out = '';
-            for (let i = 0; i < bin.length; i += 2) {
-                const bits = bin.substr(i, 2);
-                if (bits === '00') out += '0';
-                else if (bits === '01') out += 'O';
-                else if (bits === '10') out += 'o';
-                else out += '0';
-            }
-            return out;
-        }
-        
+        // Функция декодирования для режима 0Oo
         function _0OoToBase64(str) {
             let bin = '';
             for (let i = 0; i < str.length; ++i) {
@@ -50,10 +37,13 @@
                 else if (c === 'o') bin += '10';
                 else bin += '00';
             }
+            
+            // Удаляем лишние биты в конце, чтобы длина была кратна 6
             const remainder = bin.length % 6;
             if (remainder !== 0) {
                 bin = bin.slice(0, -remainder);
             }
+            
             let base64 = '';
             for (let i = 0; i < bin.length; i += 6) {
                 const sextet = bin.substr(i, 6);
@@ -65,117 +55,86 @@
                 else if (v === 62) base64 += '+';
                 else if (v === 63) base64 += '/';
             }
+            
+            // Добавляем паддинг до кратности 4
             while (base64.length % 4) {
                 base64 += '=';
             }
             return base64;
         }
         
-        // Функция для безопасного декодирования base64
-        function safeBase64Decode(base64) {
+        function decode0Oo(short) {
             try {
-                // Первая попытка: декодировать как UTF-8
+                const base64 = _0OoToBase64(short);
                 return decodeURIComponent(escape(atob(base64)));
-            } catch (e1) {
+            } catch (e) {
                 try {
-                    // Вторая попытка: просто atob
+                    const base64 = _0OoToBase64(short);
                     return atob(base64);
                 } catch (e2) {
                     return null;
                 }
             }
         }
-        
-        // Основная функция декодирования
-        function decodeShortToUrl(short) {
-            // Если строка состоит только из символов 0, O, o - это 0Oo кодировка
-            if (is0OoString(short)) {
-                try {
-                    // Декодируем 0Oo в base64
-                    const base64From0Oo = _0OoToBase64(short);
-                    // Декодируем base64
-                    const decoded = safeBase64Decode(base64From0Oo);
-                    if (decoded && (decoded.startsWith('http://') || decoded.startsWith('https://'))) {
-                        return decoded;
-                    }
-                } catch (e) {
-                    // Если не удалось декодировать 0Oo, пробуем как обычный base64
-                }
-            }
-            
-            // Пробуем декодировать как обычный base64 (URL-safe)
-            try {
-                let base64 = short;
-                // Заменяем URL-safe символы обратно
-                base64 = base64.replace(/-/g, '+').replace(/_/g, '/');
-                // Добавляем padding если нужно
-                while (base64.length % 4) {
-                    base64 += '=';
-                }
-                
-                const decoded = safeBase64Decode(base64);
-                if (decoded) {
-                    // Проверяем, является ли результат 0Oo-строкой
-                    if (is0OoString(decoded)) {
-                        // Если да, декодируем дальше как 0Oo
-                        const base64From0Oo = _0OoToBase64(decoded);
-                        const finalDecoded = safeBase64Decode(base64From0Oo);
-                        return finalDecoded;
-                    }
-                    
-                    // Если результат похож на URL, возвращаем его
-                    if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
-                        return decoded;
-                    }
-                }
-            } catch (e) {
-                // Если не удалось декодировать, возвращаем null
-                return null;
-            }
-            
-            return null;
-        }
-        
-        // Основная логика обработки URL
-        (function() {
-            // Получаем путь без ведущего слеша
+
+        // Основная функция обработки URL
+        function processRedirect() {
+            // Получаем путь после домена (без начального слэша)
             const path = window.location.pathname.substring(1);
             
-            // Если путь не пустой (не главная страница)
-            if (path) {
-                // Пытаемся декодировать URL
-                const decodedUrl = decodeShortToUrl(path);
-                
-                // Если декодирование успешно и результат похож на URL
-                if (decodedUrl && (decodedUrl.startsWith('http://') || decodedUrl.startsWith('https://'))) {
+            // Если путь пустой или содержит некорректные символы, не делаем редирект
+            if (!path || path.length === 0) {
+                return false;
+            }
+            
+            // Проверяем, содержит ли путь только символы 0, O, o
+            const is0OoMode = /^[0Oo]+$/.test(path);
+            
+            let decodedUrl = null;
+            
+            if (is0OoMode) {
+                // Используем декодирование для режима 0Oo
+                decodedUrl = decode0Oo(path);
+            } else {
+                // Используем декодирование для обычного режима
+                decodedUrl = decodeNormal(path);
+            }
+            
+            // Если декодирование успешно и получен валидный URL
+            if (decodedUrl) {
+                try {
                     // Проверяем, что это валидный URL
-                    try {
-                        new URL(decodedUrl);
-                        // Делаем мгновенный редирект
-                        window.location.replace(decodedUrl);
-                        return;
-                    } catch (e) {
-                        // Если не валидный URL, показываем 404
-                        console.log('Invalid decoded URL:', decodedUrl);
-                    }
-                } else {
-                    // Пробуем декодировать еще раз, но предварительно убираем возможные лишние символы
-                    const cleanPath = path.split('?')[0].split('#')[0];
-                    if (cleanPath !== path) {
-                        const decodedClean = decodeShortToUrl(cleanPath);
-                        if (decodedClean && (decodedClean.startsWith('http://') || decodedClean.startsWith('https://'))) {
-                            try {
-                                new URL(decodedClean);
-                                window.location.replace(decodedClean);
-                                return;
-                            } catch (e) {
-                                console.log('Invalid decoded URL from clean path:', decodedClean);
-                            }
-                        }
-                    }
+                    const url = new URL(decodedUrl);
+                    // Делаем мгновенный редирект
+                    window.location.replace(url.toString());
+                    return true;
+                } catch (e) {
+                    // Если невалидный URL, показываем обычную 404
+                    return false;
                 }
             }
-        })();
+            
+            return false;
+        }
+
+        // Запускаем обработку при загрузке страницы
+        window.addEventListener('DOMContentLoaded', function() {
+            // Пытаемся сделать редирект
+            const redirectSuccess = processRedirect();
+            
+            // Если редирект не удался, показываем страницу 404
+            if (!redirectSuccess) {
+                // Активируем визуальные эффекты только если редирект не произошел
+                document.body.classList.add('flicker');
+                
+                // Запускаем создание артефактов
+                setTimeout(() => {
+                    if (typeof scheduleArtifact === 'function') {
+                        scheduleArtifact();
+                    }
+                }, 100);
+            }
+        });
     </script>
     
     <style>
@@ -615,7 +574,7 @@
         }
     </style>
 </head>
-<body class="flicker">
+<body>
     <div class="glitch-overlay" style="background: linear-gradient(45deg, var(--accent) 0%, transparent 50%);"></div>
     <div class="scanlines"></div>
     <div class="noise"></div>
@@ -644,18 +603,7 @@
     </main>
 
     <script>
-        // Этот скрипт выполнится только если не было редиректа
-        const errorCode = document.querySelector('.error-code');
-        if (errorCode) {
-            errorCode.addEventListener('mouseover', function() {
-                this.style.animation = 'glitch 0.3s infinite';
-            });
-            
-            errorCode.addEventListener('mouseout', function() {
-                this.style.animation = 'glitch 2s infinite';
-            });
-        }
-
+        // Функции для визуальных эффектов (только если редирект не произошел)
         function isInTextArea(x, y) {
             const container = document.querySelector('.error-container');
             const rect = container.getBoundingClientRect();
@@ -799,9 +747,20 @@
             
             setTimeout(scheduleArtifact, Math.random() * (maxInterval - minInterval) + minInterval);
         }
-        
-        scheduleArtifact();
 
+        // Эффекты при наведении на код ошибки
+        const errorCode = document.querySelector('.error-code');
+        if (errorCode) {
+            errorCode.addEventListener('mouseover', function() {
+                this.style.animation = 'glitch 0.3s infinite';
+            });
+            
+            errorCode.addEventListener('mouseout', function() {
+                this.style.animation = 'glitch 2s infinite';
+            });
+        }
+
+        // Случайные эффекты
         setInterval(() => {
             const elements = document.querySelectorAll('.error-code, .error-title, .error-message, .error-explanation, .home-link');
             elements.forEach(el => {
