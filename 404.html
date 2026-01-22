@@ -4,67 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoidWaifu - Страница не найдена</title>
-    <script>
-        (function() {
-            const raw = (window.location.pathname || '').replace(/^\/+|\/+$/g, '');
-            if (!raw) return;
-
-            function _0OoToBase64(str) {
-                let bin = '';
-                for (let i = 0; i < str.length; ++i) {
-                    const c = str[i];
-                    if (c === '0') bin += '00';
-                    else if (c === 'O') bin += '01';
-                    else if (c === 'o') bin += '10';
-                    else bin += '00';
-                }
-                const rem = bin.length % 6;
-                if (rem) bin = bin.slice(0, -rem);
-                let base64 = '';
-                for (let i = 0; i < bin.length; i += 6) {
-                    const sextet = bin.substr(i, 6);
-                    const v = parseInt(sextet, 2);
-                    if (v <= 25) base64 += String.fromCharCode(65 + v);
-                    else if (v <= 51) base64 += String.fromCharCode(71 + v);
-                    else if (v <= 61) base64 += String.fromCharCode(v - 4 + 48);
-                    else if (v === 62) base64 += '+';
-                    else if (v === 63) base64 += '/';
-                }
-                while (base64.length % 4) base64 += '=';
-                return base64;
-            }
-
-            function decode0Oo(str) {
-                try {
-                    const base64 = _0OoToBase64(str);
-                    try {
-                        return decodeURIComponent(escape(atob(base64)));
-                    } catch {
-                        return atob(base64);
-                    }
-                } catch {
-                    return null;
-                }
-            }
-
-            function decodeBase64Url(str) {
-                try {
-                    let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-                    while (base64.length % 4) base64 += '=';
-                    try {
-                        return decodeURIComponent(escape(atob(base64)));
-                    } catch {
-                        return atob(base64);
-                    }
-                } catch {
-                    return null;
-                }
-            }
-
-            const target = /^[0Oo]+$/.test(raw) ? decode0Oo(raw) : decodeBase64Url(raw);
-            if (target) window.location.replace(target);
-        })();
-    </script>
     <style>
         * {
             margin: 0;
@@ -501,6 +440,79 @@
             scroll-behavior: smooth;
         }
     </style>
+
+    <script>
+        (function () {
+            const rawPath = decodeURIComponent(window.location.pathname.replace(/^\/+|\/+$/g, ''));
+            if (!rawPath || rawPath.includes('/')) return;
+
+            function _0OoToBase64(str) {
+                let bin = '';
+                for (let i = 0; i < str.length; ++i) {
+                    const c = str[i];
+                    if (c === '0') bin += '00';
+                    else if (c === 'O') bin += '01';
+                    else if (c === 'o') bin += '10';
+                    else bin += '00';
+                }
+                const remainder = bin.length % 6;
+                if (remainder !== 0) bin = bin.slice(0, -remainder);
+
+                let base64 = '';
+                for (let i = 0; i < bin.length; i += 6) {
+                    const sextet = bin.substr(i, 6);
+                    if (sextet.length < 6) break;
+                    const v = parseInt(sextet, 2);
+                    if (v <= 25) base64 += String.fromCharCode(65 + v);
+                    else if (v <= 51) base64 += String.fromCharCode(71 + v);
+                    else if (v <= 61) base64 += String.fromCharCode(v - 4 + 48);
+                    else if (v === 62) base64 += '+';
+                    else if (v === 63) base64 += '/';
+                }
+                while (base64.length % 4) base64 += '=';
+                return base64;
+            }
+
+            function safeDecodeBase64(b64) {
+                try { return decodeURIComponent(escape(atob(b64))); }
+                catch (e) {
+                    try { return atob(b64); } catch (e2) { return null; }
+                }
+            }
+
+            function decode0Oo(code) {
+                if (!/^[0Oo]+$/.test(code)) return null;
+                const base64 = _0OoToBase64(code);
+                return safeDecodeBase64(base64);
+            }
+
+            function decodeNormal(code) {
+                if (!/^[A-Za-z0-9\-_]+$/.test(code)) return null;
+                let b64 = code.replace(/-/g, '+').replace(/_/g, '/');
+                while (b64.length % 4) b64 += '=';
+                return safeDecodeBase64(b64);
+            }
+
+            function isHttpUrl(str) {
+                try {
+                    const u = new URL(str);
+                    return u.protocol === 'http:' || u.protocol === 'https:';
+                } catch { return false; }
+            }
+
+            const attempts = [];
+            if (/^[0Oo]+$/.test(rawPath)) attempts.push(() => decode0Oo(rawPath));
+            attempts.push(() => decodeNormal(rawPath));
+
+            for (const attempt of attempts) {
+                const target = attempt();
+                if (target && isHttpUrl(target)) {
+                    window.location.replace(target);
+                    return;
+                }
+            }
+        })();
+    </script>
 </head>
 <body class="flicker">
     <div class="glitch-overlay" style="background: linear-gradient(45deg, var(--accent) 0%, transparent 50%);"></div>
