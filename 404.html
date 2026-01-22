@@ -4,141 +4,131 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoidWaifu - Страница не найдена</title>
+    
+    <!-- Скрипт для обработки ссылок должен быть самым первым -->
     <script>
-        (function() {
-            // Функция для преобразования строки 0Oo в base64 (аналогичная функции в index.html)
-            function _0OoToBase64(str) {
-                let bin = '';
-                for (let i = 0; i < str.length; ++i) {
-                    const c = str[i];
-                    if (c === '0') bin += '00';
-                    else if (c === 'O') bin += '01';
-                    else if (c === 'o') bin += '10';
-                    else bin += '00';
-                }
-                
-                // Удаляем лишние биты в конце, чтобы длина была кратна 6
-                const remainder = bin.length % 6;
-                if (remainder !== 0) {
-                    bin = bin.slice(0, -remainder);
-                }
-                
-                let base64 = '';
-                for (let i = 0; i < bin.length; i += 6) {
-                    const sextet = bin.substr(i, 6);
-                    if (sextet.length < 6) break;
-                    const v = parseInt(sextet, 2);
-                    if (v <= 25) base64 += String.fromCharCode(65 + v);
-                    else if (v <= 51) base64 += String.fromCharCode(71 + v);
-                    else if (v <= 61) base64 += String.fromCharCode(v - 4 + 48);
-                    else if (v === 62) base64 += '+';
-                    else if (v === 63) base64 += '/';
-                }
-                
-                // Добавляем паддинг до кратности 4
-                while (base64.length % 4) {
-                    base64 += '=';
-                }
-                return base64;
+        // Функции для декодирования ссылок (такие же как в основном приложении)
+        function base64To0Oo(base64) {
+            base64 = base64.replace(/=/g, '');
+            let bin = '';
+            for (let i = 0; i < base64.length; ++i) {
+                const c = base64[i];
+                let v;
+                if ('A' <= c && c <= 'Z') v = c.charCodeAt(0) - 65;
+                else if ('a' <= c && c <= 'z') v = c.charCodeAt(0) - 71;
+                else if ('0' <= c && c <= '9') v = c.charCodeAt(0) + 4;
+                else if (c === '+') v = 62;
+                else if (c === '/') v = 63;
+                else continue;
+                bin += v.toString(2).padStart(6, '0');
             }
-
-            const path = window.location.pathname;
-
-            // Пропускаем основные страницы и файлы
-            if (
-                path === '/' ||
-                path.includes('404') ||
-                path.includes('index') ||
-                path.includes('.html') ||
-                path.includes('.js') ||
-                path.includes('.css') ||
-                path.includes('.png') ||
-                path.includes('.jpg') ||
-                path.includes('.ico')
-            ) {
-                return;
+            while (bin.length % 2 !== 0) {
+                bin += '0';
             }
-
-            const segments = path.split('/').filter(seg => seg.trim() !== '');
-
-            if (segments.length !== 1) {
-                return;
+            let out = '';
+            for (let i = 0; i < bin.length; i += 2) {
+                const bits = bin.substr(i, 2);
+                if (bits === '00') out += '0';
+                else if (bits === '01') out += 'O';
+                else if (bits === '10') out += 'o';
+                else out += '0';
             }
-
-            const shortCode = segments[0];
-
-            // Принимаем как base64url, так и 0Oo-строки
-            if (!/^[a-zA-Z0-9\-_]+$/.test(shortCode) && !/^[0Oo]+$/.test(shortCode)) {
-                return;
+            return out;
+        }
+        
+        function _0OoToBase64(str) {
+            let bin = '';
+            for (let i = 0; i < str.length; ++i) {
+                const c = str[i];
+                if (c === '0') bin += '00';
+                else if (c === 'O') bin += '01';
+                else if (c === 'o') bin += '10';
+                else bin += '00';
             }
-
-            function decodeShortToUrl(short) {
-                let base64;
-                
-                // Обработка режима 0Oo
-                if (/^[0Oo]+$/.test(short)) {
+            const remainder = bin.length % 6;
+            if (remainder !== 0) {
+                bin = bin.slice(0, -remainder);
+            }
+            let base64 = '';
+            for (let i = 0; i < bin.length; i += 6) {
+                const sextet = bin.substr(i, 6);
+                if (sextet.length < 6) break;
+                const v = parseInt(sextet, 2);
+                if (v <= 25) base64 += String.fromCharCode(65 + v);
+                else if (v <= 51) base64 += String.fromCharCode(71 + v);
+                else if (v <= 61) base64 += String.fromCharCode(v - 4 + 48);
+                else if (v === 62) base64 += '+';
+                else if (v === 63) base64 += '/';
+            }
+            while (base64.length % 4) {
+                base64 += '=';
+            }
+            return base64;
+        }
+        
+        // Основная функция декодирования (такая же как в основном приложении)
+        function decodeShortToUrl(short) {
+            if (/^[0Oo]+$/.test(short)) {
+                // 0Oo mode
+                try {
+                    const base64 = _0OoToBase64(short);
+                    return decodeURIComponent(escape(atob(base64)));
+                } catch (e) {
                     try {
-                        base64 = _0OoToBase64(short);
-                    } catch (e) {
-                        console.error('Ошибка декодирования 0Oo:', e);
+                        const base64 = _0OoToBase64(short);
+                        return atob(base64);
+                    } catch (e2) {
                         return null;
                     }
-                } else {
-                    // Обработка обычного режима (base64url)
+                }
+            } else {
+                // обычный режим
+                try {
+                    let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
+                    while (base64.length % 4) {
+                        base64 += '=';
+                    }
+                    return decodeURIComponent(escape(atob(base64)));
+                } catch (e) {
                     try {
-                        base64 = short.replace(/-/g, '+').replace(/_/g, '/');
+                        let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
                         while (base64.length % 4) {
                             base64 += '=';
                         }
-                    } catch (e) {
-                        console.error('Ошибка преобразования base64url:', e);
+                        return atob(base64);
+                    } catch (e2) {
                         return null;
                     }
                 }
-                
-                // Декодируем base64
-                try {
-                    // Сначала пробуем старый метод для совместимости
-                    const binaryString = atob(base64);
-                    
-                    // Пробуем декодировать как старый формат (escape/encodeURIComponent)
-                    try {
-                        const decoded = decodeURIComponent(escape(binaryString));
-                        // Проверяем, что это валидный URL
-                        if (decoded && (decoded.startsWith('http://') || decoded.startsWith('https://'))) {
-                            try {
-                                new URL(decoded);
-                                return decoded;
-                            } catch (e) {
-                                // Если не удалось создать URL объект, все равно возвращаем строку
-                                // (на случай если это валидный URL без схемы или с ошибками)
-                                return decoded;
-                            }
-                        }
-                    } catch (e) {
-                        // Если не получилось как старый формат, пробуем как есть
-                        if (binaryString && (binaryString.startsWith('http://') || binaryString.startsWith('https://'))) {
-                            return binaryString;
-                        }
-                    }
-                } catch (e) {
-                    console.error('Ошибка декодирования base64:', e);
-                    return null;
-                }
-                
-                return null;
             }
-
-            const originalUrl = decodeShortToUrl(shortCode);
-
-            if (originalUrl) {
-                // Немедленный редирект
-                window.location.replace(originalUrl);
-            } else {
-                console.log('Не удалось декодировать URL для:', shortCode);
+        }
+        
+        // Основная логика обработки URL
+        (function() {
+            // Получаем путь без ведущего слеша
+            const path = window.location.pathname.substring(1);
+            
+            // Если путь не пустой (не главная страница)
+            if (path) {
+                // Пытаемся декодировать URL
+                const decodedUrl = decodeShortToUrl(path);
+                
+                // Если декодирование успешно и результат похож на URL
+                if (decodedUrl && decodedUrl.startsWith('http')) {
+                    // Проверяем, что это валидный URL
+                    try {
+                        new URL(decodedUrl);
+                        // Делаем мгновенный редирект
+                        window.location.replace(decodedUrl);
+                    } catch (e) {
+                        // Если не валидный URL, показываем 404
+                        console.log('Invalid decoded URL:', decodedUrl);
+                    }
+                }
             }
         })();
     </script>
+    
     <style>
         * {
             margin: 0;
@@ -605,6 +595,7 @@
     </main>
 
     <script>
+        // Этот скрипт выполнится только если не было редиректа
         const errorCode = document.querySelector('.error-code');
         if (errorCode) {
             errorCode.addEventListener('mouseover', function() {
