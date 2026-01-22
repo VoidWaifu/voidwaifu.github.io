@@ -4,139 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoidWaifu - Страница не найдена</title>
-    
     <script>
-        // Функция декодирования для обычного режима
-        function decodeNormal(short) {
-            try {
-                let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
-                while (base64.length % 4) {
-                    base64 += '=';
+        (function() {
+            const raw = (window.location.pathname || '').replace(/^\/+|\/+$/g, '');
+            if (!raw) return;
+
+            function _0OoToBase64(str) {
+                let bin = '';
+                for (let i = 0; i < str.length; ++i) {
+                    const c = str[i];
+                    if (c === '0') bin += '00';
+                    else if (c === 'O') bin += '01';
+                    else if (c === 'o') bin += '10';
+                    else bin += '00';
                 }
-                return decodeURIComponent(escape(atob(base64)));
-            } catch (e) {
+                const rem = bin.length % 6;
+                if (rem) bin = bin.slice(0, -rem);
+                let base64 = '';
+                for (let i = 0; i < bin.length; i += 6) {
+                    const sextet = bin.substr(i, 6);
+                    const v = parseInt(sextet, 2);
+                    if (v <= 25) base64 += String.fromCharCode(65 + v);
+                    else if (v <= 51) base64 += String.fromCharCode(71 + v);
+                    else if (v <= 61) base64 += String.fromCharCode(v - 4 + 48);
+                    else if (v === 62) base64 += '+';
+                    else if (v === 63) base64 += '/';
+                }
+                while (base64.length % 4) base64 += '=';
+                return base64;
+            }
+
+            function decode0Oo(str) {
                 try {
-                    let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
-                    while (base64.length % 4) {
-                        base64 += '=';
+                    const base64 = _0OoToBase64(str);
+                    try {
+                        return decodeURIComponent(escape(atob(base64)));
+                    } catch {
+                        return atob(base64);
                     }
-                    return atob(base64);
-                } catch (e2) {
+                } catch {
                     return null;
                 }
             }
-        }
 
-        // Функция декодирования для режима 0Oo
-        function _0OoToBase64(str) {
-            let bin = '';
-            for (let i = 0; i < str.length; ++i) {
-                const c = str[i];
-                if (c === '0') bin += '00';
-                else if (c === 'O') bin += '01';
-                else if (c === 'o') bin += '10';
-                else bin += '00';
-            }
-            
-            // Удаляем лишние биты в конце, чтобы длина была кратна 6
-            const remainder = bin.length % 6;
-            if (remainder !== 0) {
-                bin = bin.slice(0, -remainder);
-            }
-            
-            let base64 = '';
-            for (let i = 0; i < bin.length; i += 6) {
-                const sextet = bin.substr(i, 6);
-                if (sextet.length < 6) break;
-                const v = parseInt(sextet, 2);
-                if (v <= 25) base64 += String.fromCharCode(65 + v);
-                else if (v <= 51) base64 += String.fromCharCode(71 + v);
-                else if (v <= 61) base64 += String.fromCharCode(v - 4 + 48);
-                else if (v === 62) base64 += '+';
-                else if (v === 63) base64 += '/';
-            }
-            
-            // Добавляем паддинг до кратности 4
-            while (base64.length % 4) {
-                base64 += '=';
-            }
-            return base64;
-        }
-        
-        function decode0Oo(short) {
-            try {
-                const base64 = _0OoToBase64(short);
-                return decodeURIComponent(escape(atob(base64)));
-            } catch (e) {
+            function decodeBase64Url(str) {
                 try {
-                    const base64 = _0OoToBase64(short);
-                    return atob(base64);
-                } catch (e2) {
+                    let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+                    while (base64.length % 4) base64 += '=';
+                    try {
+                        return decodeURIComponent(escape(atob(base64)));
+                    } catch {
+                        return atob(base64);
+                    }
+                } catch {
                     return null;
                 }
             }
-        }
 
-        // Основная функция обработки URL
-        function processRedirect() {
-            // Получаем путь после домена (без начального слэша)
-            const path = window.location.pathname.substring(1);
-            
-            // Если путь пустой или содержит некорректные символы, не делаем редирект
-            if (!path || path.length === 0) {
-                return false;
-            }
-            
-            // Проверяем, содержит ли путь только символы 0, O, o
-            const is0OoMode = /^[0Oo]+$/.test(path);
-            
-            let decodedUrl = null;
-            
-            if (is0OoMode) {
-                // Используем декодирование для режима 0Oo
-                decodedUrl = decode0Oo(path);
-            } else {
-                // Используем декодирование для обычного режима
-                decodedUrl = decodeNormal(path);
-            }
-            
-            // Если декодирование успешно и получен валидный URL
-            if (decodedUrl) {
-                try {
-                    // Проверяем, что это валидный URL
-                    const url = new URL(decodedUrl);
-                    // Делаем мгновенный редирект
-                    window.location.replace(url.toString());
-                    return true;
-                } catch (e) {
-                    // Если невалидный URL, показываем обычную 404
-                    return false;
-                }
-            }
-            
-            return false;
-        }
-
-        // Запускаем обработку при загрузке страницы
-        window.addEventListener('DOMContentLoaded', function() {
-            // Пытаемся сделать редирект
-            const redirectSuccess = processRedirect();
-            
-            // Если редирект не удался, показываем страницу 404
-            if (!redirectSuccess) {
-                // Активируем визуальные эффекты только если редирект не произошел
-                document.body.classList.add('flicker');
-                
-                // Запускаем создание артефактов
-                setTimeout(() => {
-                    if (typeof scheduleArtifact === 'function') {
-                        scheduleArtifact();
-                    }
-                }, 100);
-            }
-        });
+            const target = /^[0Oo]+$/.test(raw) ? decode0Oo(raw) : decodeBase64Url(raw);
+            if (target) window.location.replace(target);
+        })();
     </script>
-    
     <style>
         * {
             margin: 0;
@@ -574,7 +502,7 @@
         }
     </style>
 </head>
-<body>
+<body class="flicker">
     <div class="glitch-overlay" style="background: linear-gradient(45deg, var(--accent) 0%, transparent 50%);"></div>
     <div class="scanlines"></div>
     <div class="noise"></div>
@@ -603,7 +531,17 @@
     </main>
 
     <script>
-        // Функции для визуальных эффектов (только если редирект не произошел)
+        const errorCode = document.querySelector('.error-code');
+        if (errorCode) {
+            errorCode.addEventListener('mouseover', function() {
+                this.style.animation = 'glitch 0.3s infinite';
+            });
+            
+            errorCode.addEventListener('mouseout', function() {
+                this.style.animation = 'glitch 2s infinite';
+            });
+        }
+
         function isInTextArea(x, y) {
             const container = document.querySelector('.error-container');
             const rect = container.getBoundingClientRect();
@@ -747,20 +685,9 @@
             
             setTimeout(scheduleArtifact, Math.random() * (maxInterval - minInterval) + minInterval);
         }
+        
+        scheduleArtifact();
 
-        // Эффекты при наведении на код ошибки
-        const errorCode = document.querySelector('.error-code');
-        if (errorCode) {
-            errorCode.addEventListener('mouseover', function() {
-                this.style.animation = 'glitch 0.3s infinite';
-            });
-            
-            errorCode.addEventListener('mouseout', function() {
-                this.style.animation = 'glitch 2s infinite';
-            });
-        }
-
-        // Случайные эффекты
         setInterval(() => {
             const elements = document.querySelectorAll('.error-code, .error-title, .error-message, .error-explanation, .home-link');
             elements.forEach(el => {
