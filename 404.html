@@ -4,6 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoidWaifu - Страница не найдена</title>
+    <script>
+        (function() {
+            const path = window.location.pathname;
+            
+            if (path === '/' || 
+                path === '/Hide-Link' || 
+                path.startsWith('/Hide-Link/') ||
+                path.includes('404') ||
+                path.includes('index') ||
+                path.includes('.html') ||
+                path.includes('.js') ||
+                path.includes('.css') ||
+                path.includes('.png') ||
+                path.includes('.jpg') ||
+                path.includes('.ico')) {
+                return; 
+            }
+            
+            const segments = path.split('/').filter(seg => seg.trim() !== '');
+            
+            if (segments.length !== 1) {
+                return; 
+            }
+            
+            const shortCode = segments[0];
+            
+            if (!/^[a-zA-Z0-9\-_.]+$/.test(shortCode)) {
+                return; 
+            }
+            
+            function decodeShortToUrl(short) {
+                try {
+                    let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
+                    
+                    while (base64.length % 4) {
+                        base64 += '=';
+                    }
+                    
+                    const decoded = decodeURIComponent(escape(atob(base64)));
+                    
+                    if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
+                        try {
+                            new URL(decoded);
+                            return decoded;
+                        } catch {
+                            return null;
+                        }
+                    }
+                } catch (e) {
+                }
+                return null;
+            }
+            
+            const originalUrl = decodeShortToUrl(shortCode);
+            
+            if (originalUrl) {
+                window.location.replace(originalUrl);
+            }
+        })();
+    </script>
     <style>
         * {
             margin: 0;
