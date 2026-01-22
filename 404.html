@@ -27,8 +27,7 @@
                     else if (v === 62) base64 += '+';
                     else if (v === 63) base64 += '/';
                 }
-                // Pad to multiple of 4
-                while (base64.length % 4) base64 += '=';
+                // Не добавляем паддинг здесь!
                 return base64;
             }
 
@@ -65,8 +64,7 @@
                 if (/^[0Oo]+$/.test(short)) {
                     try {
                         let base64 = _0OoToBase64(short);
-                        // Удаляем все =, затем добавляем паддинг до кратности 4
-                        base64 = base64.replace(/=+$/, '');
+                        // Добавляем паддинг до кратности 4
                         while (base64.length % 4) base64 += '=';
                         const decoded = decodeURIComponent(escape(atob(base64)));
                         if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
