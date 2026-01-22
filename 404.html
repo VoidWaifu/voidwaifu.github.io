@@ -6,7 +6,7 @@
     <title>VoidWaifu - Страница не найдена</title>
     <script>
         (function() {
-            // Функции для кодирования/декодирования 0Oo (совместимые с основной страницей)
+            // Функция для преобразования строки 0Oo в base64 (аналогичная функции в index.html)
             function _0OoToBase64(str) {
                 let bin = '';
                 for (let i = 0; i < str.length; ++i) {
@@ -80,6 +80,7 @@
                     try {
                         base64 = _0OoToBase64(short);
                     } catch (e) {
+                        console.error('Ошибка декодирования 0Oo:', e);
                         return null;
                     }
                 } else {
@@ -90,45 +91,51 @@
                             base64 += '=';
                         }
                     } catch (e) {
+                        console.error('Ошибка преобразования base64url:', e);
                         return null;
                     }
                 }
                 
                 // Декодируем base64
                 try {
-                    // Пробуем декодировать как UTF-8 (для новых ссылок)
+                    // Сначала пробуем старый метод для совместимости
+                    const binaryString = atob(base64);
+                    
+                    // Пробуем декодировать как старый формат (escape/encodeURIComponent)
                     try {
-                        const decoded = decodeURIComponent(escape(atob(base64)));
-                        if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
+                        const decoded = decodeURIComponent(escape(binaryString));
+                        // Проверяем, что это валидный URL
+                        if (decoded && (decoded.startsWith('http://') || decoded.startsWith('https://'))) {
                             try {
                                 new URL(decoded);
                                 return decoded;
                             } catch (e) {
-                                // невалидный URL
+                                // Если не удалось создать URL объект, все равно возвращаем строку
+                                // (на случай если это валидный URL без схемы или с ошибками)
+                                return decoded;
                             }
                         }
                     } catch (e) {
-                        // Не удалось декодировать как UTF-8, пробуем как есть
-                        const decoded = atob(base64);
-                        if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
-                            try {
-                                new URL(decoded);
-                                return decoded;
-                            } catch (e) {
-                                // невалидный URL
-                            }
+                        // Если не получилось как старый формат, пробуем как есть
+                        if (binaryString && (binaryString.startsWith('http://') || binaryString.startsWith('https://'))) {
+                            return binaryString;
                         }
                     }
                 } catch (e) {
+                    console.error('Ошибка декодирования base64:', e);
                     return null;
                 }
+                
                 return null;
             }
 
             const originalUrl = decodeShortToUrl(shortCode);
 
             if (originalUrl) {
+                // Немедленный редирект
                 window.location.replace(originalUrl);
+            } else {
+                console.log('Не удалось декодировать URL для:', shortCode);
             }
         })();
     </script>
