@@ -6,8 +6,8 @@
     <title>VoidWaifu - Страница не найдена</title>
     <script>
         (function() {
+            // Функции для кодирования/декодирования 0Oo (совместимые с основной страницей)
             function _0OoToBase64(str) {
-                // Each 3 chars = 6 bits (2 bits per char)
                 let bin = '';
                 for (let i = 0; i < str.length; ++i) {
                     const c = str[i];
@@ -16,23 +16,35 @@
                     else if (c === 'o') bin += '10';
                     else bin += '00';
                 }
-                // Now, split into 6 bits, convert to base64
+                
+                // Удаляем лишние биты в конце, чтобы длина была кратна 6
+                const remainder = bin.length % 6;
+                if (remainder !== 0) {
+                    bin = bin.slice(0, -remainder);
+                }
+                
                 let base64 = '';
-                for (let i = 0; i + 5 < bin.length; i += 6) {
+                for (let i = 0; i < bin.length; i += 6) {
                     const sextet = bin.substr(i, 6);
+                    if (sextet.length < 6) break;
                     const v = parseInt(sextet, 2);
                     if (v <= 25) base64 += String.fromCharCode(65 + v);
                     else if (v <= 51) base64 += String.fromCharCode(71 + v);
-                    else if (v <= 61) base64 += String.fromCharCode(v - 4); // FIX: correct digits mapping (v 52..61 -> '0'..'9')
+                    else if (v <= 61) base64 += String.fromCharCode(v - 4 + 48);
                     else if (v === 62) base64 += '+';
                     else if (v === 63) base64 += '/';
                 }
-                // Не добавляем паддинг здесь!
+                
+                // Добавляем паддинг до кратности 4
+                while (base64.length % 4) {
+                    base64 += '=';
+                }
                 return base64;
             }
 
             const path = window.location.pathname;
 
+            // Пропускаем основные страницы и файлы
             if (
                 path === '/' ||
                 path.includes('404') ||
@@ -55,44 +67,61 @@
 
             const shortCode = segments[0];
 
-            // Исправлено: принимаем либо base64url, либо 0Oo-строку
-            if (!/^[a-zA-Z0-9\-_\.]+$/.test(shortCode) && !/^[0Oo]+$/.test(shortCode)) {
+            // Принимаем как base64url, так и 0Oo-строки
+            if (!/^[a-zA-Z0-9\-_]+$/.test(shortCode) && !/^[0Oo]+$/.test(shortCode)) {
                 return;
             }
 
             function decodeShortToUrl(short) {
+                let base64;
+                
+                // Обработка режима 0Oo
                 if (/^[0Oo]+$/.test(short)) {
                     try {
-                        let base64 = _0OoToBase64(short);
-                        // Добавляем паддинг до кратности 4
-                        while (base64.length % 4) base64 += '=';
+                        base64 = _0OoToBase64(short);
+                    } catch (e) {
+                        return null;
+                    }
+                } else {
+                    // Обработка обычного режима (base64url)
+                    try {
+                        base64 = short.replace(/-/g, '+').replace(/_/g, '/');
+                        while (base64.length % 4) {
+                            base64 += '=';
+                        }
+                    } catch (e) {
+                        return null;
+                    }
+                }
+                
+                // Декодируем base64
+                try {
+                    // Пробуем декодировать как UTF-8 (для новых ссылок)
+                    try {
                         const decoded = decodeURIComponent(escape(atob(base64)));
                         if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
                             try {
                                 new URL(decoded);
                                 return decoded;
-                            } catch {
-                                return null;
+                            } catch (e) {
+                                // невалидный URL
                             }
                         }
-                    } catch (e) {}
-                    return null;
-                }
-                try {
-                    let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
-                    while (base64.length % 4) {
-                        base64 += '=';
-                    }
-                    const decoded = decodeURIComponent(escape(atob(base64)));
-                    if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
-                        try {
-                            new URL(decoded);
-                            return decoded;
-                        } catch {
-                            return null;
+                    } catch (e) {
+                        // Не удалось декодировать как UTF-8, пробуем как есть
+                        const decoded = atob(base64);
+                        if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
+                            try {
+                                new URL(decoded);
+                                return decoded;
+                            } catch (e) {
+                                // невалидный URL
+                            }
                         }
                     }
-                } catch (e) {}
+                } catch (e) {
+                    return null;
+                }
                 return null;
             }
 
