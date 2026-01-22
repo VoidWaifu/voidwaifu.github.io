@@ -7,7 +7,12 @@
     
     <!-- Скрипт для обработки ссылок должен быть самым первым -->
     <script>
-        // Функции для декодирования ссылок (такие же как в основном приложении)
+        // Функция для проверки, является ли строка 0Oo-кодировкой
+        function is0OoString(str) {
+            return /^[0Oo]+$/.test(str);
+        }
+
+        // Функции для декодирования ссылок
         function base64To0Oo(base64) {
             base64 = base64.replace(/=/g, '');
             let bin = '';
@@ -66,40 +71,36 @@
             return base64;
         }
         
-        // Основная функция декодирования (такая же как в основном приложении)
+        // Основная функция декодирования
         function decodeShortToUrl(short) {
-            if (/^[0Oo]+$/.test(short)) {
-                // 0Oo mode
-                try {
-                    const base64 = _0OoToBase64(short);
-                    return decodeURIComponent(escape(atob(base64)));
-                } catch (e) {
+            // Пробуем сначала декодировать как обычный base64
+            try {
+                // Заменяем URL-safe символы обратно
+                let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
+                // Добавляем padding если нужно
+                while (base64.length % 4) {
+                    base64 += '=';
+                }
+                const decoded = decodeURIComponent(escape(atob(base64)));
+                // Проверяем, является ли результат 0Oo-строкой
+                if (is0OoString(decoded)) {
+                    // Если да, декодируем дальше как 0Oo
+                    const base64From0Oo = _0OoToBase64(decoded);
+                    const finalDecoded = decodeURIComponent(escape(atob(base64From0Oo)));
+                    return finalDecoded;
+                }
+                return decoded;
+            } catch (e1) {
+                // Если не удалось как обычный base64, пробуем как 0Oo
+                if (is0OoString(short)) {
                     try {
                         const base64 = _0OoToBase64(short);
-                        return atob(base64);
+                        return decodeURIComponent(escape(atob(base64)));
                     } catch (e2) {
                         return null;
                     }
                 }
-            } else {
-                // обычный режим
-                try {
-                    let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
-                    while (base64.length % 4) {
-                        base64 += '=';
-                    }
-                    return decodeURIComponent(escape(atob(base64)));
-                } catch (e) {
-                    try {
-                        let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
-                        while (base64.length % 4) {
-                            base64 += '=';
-                        }
-                        return atob(base64);
-                    } catch (e2) {
-                        return null;
-                    }
-                }
+                return null;
             }
         }
         
@@ -114,12 +115,13 @@
                 const decodedUrl = decodeShortToUrl(path);
                 
                 // Если декодирование успешно и результат похож на URL
-                if (decodedUrl && decodedUrl.startsWith('http')) {
+                if (decodedUrl && (decodedUrl.startsWith('http://') || decodedUrl.startsWith('https://'))) {
                     // Проверяем, что это валидный URL
                     try {
                         new URL(decodedUrl);
                         // Делаем мгновенный редирект
                         window.location.replace(decodedUrl);
+                        return;
                     } catch (e) {
                         // Если не валидный URL, показываем 404
                         console.log('Invalid decoded URL:', decodedUrl);
