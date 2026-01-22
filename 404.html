@@ -7,6 +7,7 @@
     <script>
         (function() {
             function _0OoToBase64(str) {
+                // Each 3 chars = 6 bits (2 bits per char)
                 let bin = '';
                 for (let i = 0; i < str.length; ++i) {
                     const c = str[i];
@@ -15,6 +16,7 @@
                     else if (c === 'o') bin += '10';
                     else bin += '00';
                 }
+                // Now, split into 6 bits, convert to base64
                 let base64 = '';
                 for (let i = 0; i + 5 < bin.length; i += 6) {
                     const sextet = bin.substr(i, 6);
@@ -25,13 +27,15 @@
                     else if (v === 62) base64 += '+';
                     else if (v === 63) base64 += '/';
                 }
+                // Pad to multiple of 4
                 while (base64.length % 4) base64 += '=';
                 return base64;
             }
 
             const path = window.location.pathname;
-            
-            if (path === '/' || 
+
+            if (
+                path === '/' ||
                 path.includes('404') ||
                 path.includes('index') ||
                 path.includes('.html') ||
@@ -39,27 +43,31 @@
                 path.includes('.css') ||
                 path.includes('.png') ||
                 path.includes('.jpg') ||
-                path.includes('.ico')) {
-                return; 
+                path.includes('.ico')
+            ) {
+                return;
             }
-            
+
             const segments = path.split('/').filter(seg => seg.trim() !== '');
-            
+
             if (segments.length !== 1) {
-                return; 
+                return;
             }
-            
+
             const shortCode = segments[0];
-            
-            if (!/^[a-zA-Z0-9\-_.]+$/.test(shortCode) && !/^[0Oo]+$/.test(shortCode)) {
-                return; 
+
+            // Исправлено: принимаем либо base64url, либо 0Oo-строку
+            if (!/^[a-zA-Z0-9\-_\.]+$/.test(shortCode) && !/^[0Oo]+$/.test(shortCode)) {
+                return;
             }
-            
+
             function decodeShortToUrl(short) {
                 if (/^[0Oo]+$/.test(short)) {
                     try {
                         const base64 = _0OoToBase64(short);
-                        const decoded = decodeURIComponent(escape(atob(base64)));
+                        // Обрезаем паддинг для atob
+                        const cleanBase64 = base64.replace(/=+$/, '');
+                        const decoded = decodeURIComponent(escape(atob(cleanBase64)));
                         if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
                             try {
                                 new URL(decoded);
@@ -88,9 +96,9 @@
                 } catch (e) {}
                 return null;
             }
-            
+
             const originalUrl = decodeShortToUrl(shortCode);
-            
+
             if (originalUrl) {
                 window.location.replace(originalUrl);
             }
