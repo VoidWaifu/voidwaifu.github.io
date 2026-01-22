@@ -6,8 +6,8 @@
     <title>VoidWaifu - Страница не найдена</title>
     <script>
         (function() {
-            // Функции для кодирования/декодирования 0Oo (такие же как в основном приложении)
             function _0OoToBase64(str) {
+                // Each 3 chars = 6 bits (2 bits per char)
                 let bin = '';
                 for (let i = 0; i < str.length; ++i) {
                     const c = str[i];
@@ -16,23 +16,23 @@
                     else if (c === 'o') bin += '10';
                     else bin += '00';
                 }
-                
+                // Now, split into 6 bits, convert to base64
                 let base64 = '';
                 for (let i = 0; i + 5 < bin.length; i += 6) {
                     const sextet = bin.substr(i, 6);
                     const v = parseInt(sextet, 2);
                     if (v <= 25) base64 += String.fromCharCode(65 + v);
                     else if (v <= 51) base64 += String.fromCharCode(71 + v);
-                    else if (v <= 61) base64 += String.fromCharCode(v - 4 + 48);
+                    else if (v <= 61) base64 += String.fromCharCode(v - 4); // FIX: correct digits mapping (v 52..61 -> '0'..'9')
                     else if (v === 62) base64 += '+';
                     else if (v === 63) base64 += '/';
                 }
+                // Не добавляем паддинг здесь!
                 return base64;
             }
 
             const path = window.location.pathname;
 
-            // Пропускаем основные страницы и файлы
             if (
                 path === '/' ||
                 path.includes('404') ||
@@ -55,87 +55,44 @@
 
             const shortCode = segments[0];
 
-            // Принимаем как base64url, так и 0Oo-строки
-            if (!/^[a-zA-Z0-9\-_]+$/.test(shortCode) && !/^[0Oo]+$/.test(shortCode)) {
+            // Исправлено: принимаем либо base64url, либо 0Oo-строку
+            if (!/^[a-zA-Z0-9\-_\.]+$/.test(shortCode) && !/^[0Oo]+$/.test(shortCode)) {
                 return;
             }
 
             function decodeShortToUrl(short) {
-                // Обработка режима 0Oo
                 if (/^[0Oo]+$/.test(short)) {
                     try {
                         let base64 = _0OoToBase64(short);
                         // Добавляем паддинг до кратности 4
                         while (base64.length % 4) base64 += '=';
-                        
-                        // Декодируем base64
-                        const binaryString = atob(base64);
-                        const bytes = new Uint8Array(binaryString.length);
-                        for (let i = 0; i < binaryString.length; i++) {
-                            bytes[i] = binaryString.charCodeAt(i);
-                        }
-                        const decodedText = new TextDecoder().decode(bytes);
-                        
-                        // Проверяем, что это валидный URL
-                        try {
-                            const url = new URL(decodedText);
-                            if (url.protocol === 'http:' || url.protocol === 'https:') {
-                                return decodedText;
-                            }
-                        } catch (e) {
-                            // Пробуем декодировать как старый формат (escape/encodeURIComponent)
+                        const decoded = decodeURIComponent(escape(atob(base64)));
+                        if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
                             try {
-                                const oldFormat = decodeURIComponent(escape(binaryString));
-                                const url = new URL(oldFormat);
-                                if (url.protocol === 'http:' || url.protocol === 'https:') {
-                                    return oldFormat;
-                                }
-                            } catch (e2) {
+                                new URL(decoded);
+                                return decoded;
+                            } catch {
                                 return null;
                             }
                         }
-                    } catch (e) {
-                        return null;
-                    }
+                    } catch (e) {}
                     return null;
                 }
-                
-                // Обработка обычного режима (base64url)
                 try {
                     let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
                     while (base64.length % 4) {
                         base64 += '=';
                     }
-                    
-                    // Декодируем base64
-                    const binaryString = atob(base64);
-                    const bytes = new Uint8Array(binaryString.length);
-                    for (let i = 0; i < binaryString.length; i++) {
-                        bytes[i] = binaryString.charCodeAt(i);
-                    }
-                    const decodedText = new TextDecoder().decode(bytes);
-                    
-                    // Проверяем, что это валидный URL
-                    try {
-                        const url = new URL(decodedText);
-                        if (url.protocol === 'http:' || url.protocol === 'https:') {
-                            return decodedText;
-                        }
-                    } catch (e) {
-                        // Пробуем декодировать как старый формат (escape/encodeURIComponent)
+                    const decoded = decodeURIComponent(escape(atob(base64)));
+                    if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
                         try {
-                            const oldFormat = decodeURIComponent(escape(binaryString));
-                            const url = new URL(oldFormat);
-                            if (url.protocol === 'http:' || url.protocol === 'https:') {
-                                return oldFormat;
-                            }
-                        } catch (e2) {
+                            new URL(decoded);
+                            return decoded;
+                        } catch {
                             return null;
                         }
                     }
-                } catch (e) {
-                    return null;
-                }
+                } catch (e) {}
                 return null;
             }
 
