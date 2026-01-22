@@ -58,7 +58,7 @@
                     </div>
                     <div class="buttons-block">
                         <button class="action-btn" id="telegramBtn">Телеграм</button>
-                        <button class="action-btn" id="emailBtn">Почта</button>
+                        <button class="action-btn" id="githubBtn">GitHub</button>
                         <button class="action-btn" id="projectsBtn">Все проекты</button>
                     </div>
                 </div>
@@ -72,7 +72,7 @@
         const menuToggle = document.getElementById('menuToggle');
         const mainNav = document.getElementById('mainNav');
         const telegramBtn = document.getElementById('telegramBtn');
-        const emailBtn = document.getElementById('emailBtn');
+        const githubBtn = document.getElementById('githubBtn');
         const projectsBtn = document.getElementById('projectsBtn');
         const notification = document.getElementById('notification');
 
@@ -93,17 +93,8 @@
             window.open('https://t.me/VoidWaifu', '_blank');
         });
 
-        emailBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText('voidwaifu@hotmail.com')
-                .then(() => {
-                    notification.classList.add('show');
-                    setTimeout(() => {
-                        notification.classList.remove('show');
-                    }, 3000);
-                })
-                .catch(err => {
-                    console.error('Ошибка при копировании: ', err);
-                });
+        githubBtn.addEventListener('click', () => {
+            window.open('https://github.com/VoidWaifu', '_blank');
         });
 
         projectsBtn.addEventListener('click', () => {
