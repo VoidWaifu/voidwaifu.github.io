@@ -6,75 +6,47 @@
     <title>VoidWaifu - Страница не найдена</title>
     <script>
         (function () {
-            function _0OoToBase64(str) {
-                let bin = '';
-                for (let i = 0; i < str.length; ++i) {
-                    const c = str[i];
-                    if (c === '0') bin += '00';
-                    else if (c === 'O') bin += '01';
-                    else if (c === 'o') bin += '10';
-                    else bin += '00';
-                }
-                const remainder = bin.length % 6;
-                if (remainder !== 0) bin = bin.slice(0, -remainder);
-                let base64 = '';
-                for (let i = 0; i < bin.length; i += 6) {
-                    const sextet = bin.substr(i, 6);
-                    if (sextet.length < 6) break;
-                    const v = parseInt(sextet, 2);
-                    if (v <= 25) base64 += String.fromCharCode(65 + v);
-                    else if (v <= 51) base64 += String.fromCharCode(71 + v);
-                    else if (v <= 61) base64 += String.fromCharCode(v - 4 + 48);
-                    else if (v === 62) base64 += '+';
-                    else if (v === 63) base64 += '/';
-                }
-                while (base64.length % 4) base64 += '=';
-                return base64;
-            }
-
-            function decodeShortToUrl(short) {
-                if (/^[0Oo]+$/.test(short)) {
-                    try {
-                        const base64 = _0OoToBase64(short);
-                        return decodeURIComponent(escape(atob(base64)));
-                    } catch (e) {
-                        try {
-                            const base64 = _0OoToBase64(short);
-                            return atob(base64);
-                        } catch (e2) {
-                            return null;
-                        }
-                    }
-                } else {
-                    try {
-                        let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
-                        while (base64.length % 4) base64 += '=';
-                        return decodeURIComponent(escape(atob(base64)));
-                    } catch (e) {
-                        try {
-                            let base64 = short.replace(/-/g, '+').replace(/_/g, '/');
-                            while (base64.length % 4) base64 += '=';
-                            return atob(base64);
-                        } catch (e2) {
-                            return null;
-                        }
-                    }
-                }
-            }
-
-            const path = (location.pathname || '/').replace(/^\/+/, '').split('/')[0];
+            const path = location.pathname.replace(/^\/+/, '');
             if (!path) return;
 
-            const decoded = decodeShortToUrl(path);
-            if (!decoded) return;
+            const short = decodeURIComponent(path);
+            const BASE64URL_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 
-            try {
-                const url = new URL(decoded);
-                if (url.protocol === 'http:' || url.protocol === 'https:') {
-                    location.replace(url.toString());
+            function decodeShortToUrl(shortCode) {
+                try {
+                    let base64 = shortCode.replace(/-/g, '+').replace(/_/g, '/');
+                    while (base64.length % 4) base64 += '=';
+                    return decodeURIComponent(escape(atob(base64)));
+                } catch (e) {
+                    return null;
                 }
+            }
+
+            function decodeOooToUrl(ooo) {
+                if (ooo.length % 4 !== 0) return null;
+                let base64url = '';
+                for (let i = 0; i < ooo.length; i += 4) {
+                    let idx = 0;
+                    for (let j = 0; j < 4; j++) {
+                        const c = ooo[i + j];
+                        const trit = c === '0' ? 0 : (c === 'o' ? 1 : (c === 'O' ? 2 : -1));
+                        if (trit < 0) return null;
+                        idx += trit * Math.pow(3, j);
+                    }
+                    base64url += BASE64URL_ALPHABET[idx] || '';
+                }
+                return decodeShortToUrl(base64url);
+            }
+
+            const isOoo = /^[0oO]+$/.test(short);
+            const decoded = isOoo ? decodeOooToUrl(short) : decodeShortToUrl(short);
+
+            if (!decoded) return;
+            try {
+                const target = new URL(decoded);
+                location.replace(target.href);
             } catch (e) {
-                // leave 404
+                return;
             }
         })();
     </script>
