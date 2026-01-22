@@ -65,9 +65,10 @@
                 if (/^[0Oo]+$/.test(short)) {
                     try {
                         const base64 = _0OoToBase64(short);
-                        // Обрезаем паддинг для atob
-                        const cleanBase64 = base64.replace(/=+$/, '');
-                        const decoded = decodeURIComponent(escape(atob(cleanBase64)));
+                        // Добавляем паддинг если нужно
+                        let padded = base64;
+                        while (padded.length % 4) padded += '=';
+                        const decoded = decodeURIComponent(escape(atob(padded)));
                         if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
                             try {
                                 new URL(decoded);
