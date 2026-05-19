@@ -59,15 +59,12 @@
                     <div class="buttons-block">
                         <button class="action-btn" id="telegramBtn">Телеграм</button>
                         <button class="action-btn" id="githubBtn">GitHub</button>
-                        <button class="action-btn" id="subBtn">Создание субтитров</button>
                         <button class="action-btn" id="projectsBtn">Все проекты</button>
                     </div>
                 </div>
             </section>
         </div>
     </main>
-
-    <div id="notification" class="notification">Почта скопирована</div>
 
     <script>
         const menuToggle = document.getElementById('menuToggle');
@@ -97,10 +94,6 @@
 
         githubBtn.addEventListener('click', () => {
             window.open('https://github.com/VoidWaifu', '_blank');
-        });
-
-        subBtn.addEventListener('click', () => {
-            window.open('https://vwsub.github.io', '_blank');
         });
 
         projectsBtn.addEventListener('click', () => {
