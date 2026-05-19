@@ -604,7 +604,7 @@
         id: ${timestamp},
         title: "${safeTitle}",
         description: "${safeDesc}"
- }`;
+ },`;
             
             navigator.clipboard.writeText(jsObject).then(() => {
                 showNotification('JS объект скопирован');
