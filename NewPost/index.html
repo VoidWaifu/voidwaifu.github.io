@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -746,7 +747,6 @@
                 const dataUrl = e.target.result;
                 const img = document.createElement('img');
                 img.src = dataUrl;
-                img.setAttribute('data-filename', file.name);
                 img.style.display = 'block';
                 img.style.margin = '0.5rem auto';
                 img.style.maxWidth = '100%';
@@ -917,10 +917,6 @@
                 tempDiv.innerHTML = html;
                 const imgs = tempDiv.querySelectorAll('img');
                 imgs.forEach(img => {
-                    const filename = img.getAttribute('data-filename');
-                    if (filename) {
-                        img.setAttribute('src', filename);
-                    }
                     img.removeAttribute('data-filename');
                     img.style.display = 'block';
                     img.style.margin = '0.5rem auto';
@@ -1566,6 +1562,12 @@
         });
 
         updateButtonStates();
+
+        window.addEventListener('beforeunload', function (e) {
+            e.preventDefault();
+            e.returnValue = '';
+        });
     </script>
 </body>
 </html>
+```
