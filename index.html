@@ -59,6 +59,7 @@
                     <div class="buttons-block">
                         <button class="action-btn" id="telegramBtn">Телеграм</button>
                         <button class="action-btn" id="githubBtn">GitHub</button>
+                        <button class="action-btn" id="donateBtn">Поддержать</button>
                         <button class="action-btn" id="projectsBtn">Все проекты</button>
                     </div>
                 </div>
@@ -90,6 +91,9 @@
 
         telegramBtn.addEventListener('click', () => {
             window.open('https://t.me/VoidWaifu', '_blank');
+        });
+        donateBtn.addEventListener('click', () => {
+            window.open('https://t.me/VoidWaifu/donate', '_blank');
         });
 
         githubBtn.addEventListener('click', () => {
