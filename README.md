@@ -1,16 +1,22 @@
-## Hello there 👋
+# VoidWaifu 🚀
 
-<!--
-**VoidWaifu/VoidWaifu** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+**Личный сайт-портфолио с блогом и коллекцией проектов.**
 
-Here are some ideas to get you started:
+[Открыть сайт](https://voidwaifu.github.io/)
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## Что это?
+
+Мой личный сайт, где я публикую:
+- 📝 **Блог** — посты на разные темы
+- 🛠️ **Проекты** — коллекция моих инструментов и приложений
+- 💬 **Контакты** — Telegram, GitHub, страница донатов
+
+## Контакты
+
+- 📱 **Telegram:** [@VoidWaifu](https://t.me/VoidWaifu)
+- 💻 **GitHub:** [VoidWaifu](https://github.com/VoidWaifu)
+- 💜 **Поддержать:** [Страница донатов](https://voidwaifu.github.io/donate/)
+
+---
+
+**Спасибо, что заглянули!** 💜
